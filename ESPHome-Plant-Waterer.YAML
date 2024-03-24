@@ -1,59 +1,54 @@
-esphome:
+substitutions:
   name: plant-waterer
+  friendly_name: Plant Waterer
 
-# Board specific config - change if not using MG Atom
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+
 esp32:
   board: m5stack-atom
   framework:
-    type: arduino
+    type: esp-idf
 
-# Enable logging
-logger:
-
-# Enable Home Assistant API - these values are autocreated by
-# ESPhome when setting new device - or you can manually add if 
-# required.
-api:
-  encryption:
-    key: "<YOUR API KEY>"
-ota:
-  password: "<YOUR OTA KEY"
-
-#Wifi Setup....
-# Manually configure IP details - comment out if you use DHCP
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  manual_ip:
-    static_ip: <IP_ADDRESS>
-    gateway: <GATEWAY_IP>
-    subnet: <SUBNET_MASK>
+  use_address: 192.168.178.36
 
-# Configuration of M5 Atom Lite onboard RGB LED    
+api:
+logger:
+ota:
+improv_serial:
+captive_portal:
+
+# Configuration of M5 Atom Lite onboard RGB LED
 light:
-  - platform: fastled_clockless
-    chipset: WS2812
+  - platform: esp32_rmt_led_strip
+    chipset: SK6812
+    rgb_order: GRB
     pin: 27
     num_leds: 1
-    rgb_order: grb
-    name: "FastLED Light"
+    rmt_channel: 0
+    name: "Atom Lite LED"
 
-# M5 Atom-Lite Grove port used to connect sensor, pin and sensor 
+# M5 Atom-Lite Grove port used to connect sensor, pin and sensor
 # calibraation may need updating for other platforms/ sensors
 sensor:
   - platform: adc
     pin: 32
     name: Soil Moisture Value
     attenuation: 11db
-    id:  soil_moisture
+    id: soil_moisture
     accuracy_decimals: 0
     unit_of_measurement: "%"
     update_interval: 10s
     icon: mdi:flower
     filters:
       - calibrate_linear:
-        - 1.795 -> 0.0
-        - 1.43 -> 100.0
+          - 1.795 -> 0.0
+          - 1.43 -> 100.0
       - sliding_window_moving_average:
           window_size: 15
           send_every: 15
@@ -61,7 +56,7 @@ sensor:
           window_size: 15
           send_every: 7
           send_first_at: 3
- 
+
 # This sensor is useful as a trigger for automation in Home Assistant
 # change the value of (soil_moisture).state > to desired threshold
 # anything below this value will report dry in home assistant.
@@ -71,15 +66,15 @@ binary_sensor:
     device_class: moisture
     #Change this value to determine desire wetness of soil
     lambda: |-
-        if (id(soil_moisture).state > 35) {
-          return true; 
-        } else {
-          return false; 
-        }
+      if (id(soil_moisture).state > 35) {
+        return true; 
+      } else {
+        return false; 
+      }
 
 # Timed switch for water pump - manually trigger water pump for specified time.
 # Ajust delay to suit lenght of time the pump runs
-# This was added to prevent the plant/ room getting drenched by an 
+# This was added to prevent the plant/ room getting drenched by an
 # accidental press of the switch emptying a whole water resevoir!
 switch:
   - platform: gpio
@@ -88,19 +83,16 @@ switch:
     name: "Water pump"
     icon: "mdi:water"
     on_turn_on:
-    - logger.log: "Pump Turned On!"
-    - delay: 30s
-    - switch.turn_off: relay
-    - logger.log: "Pump Turned Off!"
+      - logger.log: "Pump Turned On!"
+      - delay: 30s
+      - switch.turn_off: relay
+      - logger.log: "Pump Turned Off!"
 
-# MQTT Setup - esphome defaults to using hostname as prefix, add 
+# MQTT Setup - esphome defaults to using hostname as prefix, add
 # topic_prefix: if you want something more specific.
 # Staatus, sensors, light and switch are published via MQTT
-
 mqtt:
-  broker: <INSERT BROKER HOSTNAME/ IP>
+  broker: 192.168.178.2
   port: 1883
-  username: !secret mqtt_hostname
+  username: !secret mqtt_username
   password: !secret mqtt_password
-  
-captive_portal: 
