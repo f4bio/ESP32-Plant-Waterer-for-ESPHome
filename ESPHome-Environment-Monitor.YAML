@@ -15,13 +15,15 @@ esp32:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: 192.168.178.31
+  use_address: 192.168.178.36
 
 api:
 logger:
 ota:
 improv_serial:
 captive_portal:
+
+i2c:
 
 # Configuration of M5 Atom Lite onboard RGB LED
 light:
