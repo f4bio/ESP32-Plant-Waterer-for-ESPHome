@@ -1,3 +1,6 @@
+# Description: ESPHome configuration for M5 Atom Lite with SHT30 and QMP6988 sensors
+# Ref: https://github.com/Chill-Division/M5Stack-ESPHome/blob/main/ENV%20III%20Unit%20with%20Temperature%20Humidity%20Air%20Pressure%20Sensor%20(SHT30%2BQMP6988).md
+
 substitutions:
   name: environment-monitor
   friendly_name: Environment Monitor
@@ -6,9 +9,9 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
-  project:
-    name: esphome.web
-    version: "1.0"
+  # project:
+  #   name: esphome.web
+  #   version: "1.0"
 
 esp32:
   board: m5stack-atom
@@ -30,7 +33,6 @@ improv_serial:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  use_address: 192.168.178.36
 
 # MQTT Setup - esphome defaults to using hostname as prefix, add
 # topic_prefix: if you want something more specific.
@@ -43,21 +45,25 @@ mqtt:
 
 # In combination with the `ap` this allows the user
 # to provision wifi credentials to the device via WiFi AP.
-captive_portal:
+# captive_portal:
 
-dashboard_import:
-  package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
-  import_full_config: true
+# dashboard_import:
+#   package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
+#   import_full_config: true
 
 # Sets up Bluetooth LE (Only on ESP32) to allow the user
 # to provision wifi credentials to the device.
-esp32_improv:
-  authorizer: none
+# esp32_improv:
+#   authorizer: none
 
 # To have a "next url" for improv serial
 web_server:
 
 i2c:
+  sda: 16
+  scl: 17
+  scan: true
+  id: bus_1
 
 # Configuration of M5 Atom Lite onboard RGB LED
 light:
@@ -71,18 +77,22 @@ light:
 
 # M5 Atom-Lite Grove port used to connect sensor, pin and sensor
 # calibraation may need updating for other platforms/ sensors
+#ENV.III
 sensor:
+  - platform: sht3xd
+    temperature:
+      name: "Temperature - SHT30"
+    humidity:
+      name: "Humidity"
+    address: 0x44
+    update_interval: 10s
   - platform: qmp6988
     temperature:
-      name: "Temperature FB QMP ESP32"
-      oversampling: 4x
-      id: temp_qmp
-      accuracy_decimals: 1
+      name: "Temperature - QMP6988"
+      oversampling: 16x
     pressure:
-      name: "Pressure FB QMP ESP32"
-      id: pressure_qmp
-      oversampling: 4x
-      accuracy_decimals: 0
+      name: "Pressure"
+      oversampling: 16x
     address: 0x70
-    update_interval: 60s
+    update_interval: 10s
     iir_filter: 2x
